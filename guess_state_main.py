@@ -1,45 +1,56 @@
-import turtle
+from turtle import Turtle, Screen
+from timeboard import TimeBoard
 import pandas as pd
-from timer import Timer
 
-screen = turtle.Screen()
-
-print("Welcome to the guessing game!")
-image = "blank_states_img.gif"
-file = "50_states.csv"
-data = pd.read_csv(file)
-
-screen.addshape(image)
-screen.setup(width = 700, height = 600)
-turtle.shape(image)
-
-writer = turtle.Turtle() #object that write name of guessed state
-writer.hideturtle()
-writer.penup()
-
+writer = Turtle()
+screen = Screen()
 game_over = False
 score = 0
 
-timer = Timer(screen, game_over) #timerclass
+timeboard = TimeBoard(screen, game_over)
 
-states = data["state"].to_list() #column of states become list
+writer.hideturtle()
+writer.penup()
+
+with open("50_states.csv") as file:
+    data = pd.read_csv(file)
+
+print(sum(data["state"] == "Hawaii"))
+all_states = data["state"].to_list()
+
+image = "blank_states_img.gif"
+
+screen.setup(900, 900)
+screen.addshape(image)
+screen.bgpic(image)
+
+guessed_states = []
 
 while not game_over:
-    guess = screen.textinput(title=f"SCORE: {score}/50", prompt="Guess the state: ")
-    guess = guess.strip().title()
+    guess = screen.textinput(title=f"US States (50) / {score}", prompt="Guess the state: ")
+    guess = guess.strip()
+
+    if guess == "Exit":
+        missing_states = [state for state in all_states if state not in guessed_states]
+        df = pd.DataFrame(missing_states)
+        df.to_csv("States To Learn")
+        break
+
+    elif guess not in all_states:
+        print("There is no state with this name !")
 
     if guess is None:
-        break
+        print("X")
 
-    elif guess not in states:
-        break
-
-    elif guess in states:
-        new_row = data[data.state == guess].iloc[0]
+    elif guess in all_states and guess not in guessed_states:
+        new_row = data[data["state"] == guess].iloc[0]
         writer.goto(new_row.x, new_row.y)
         writer.write(new_row.state)
         score += 1
+        guessed_states.append(guess)
 
 screen.exitonclick()
 screen.mainloop()
+
+
 
